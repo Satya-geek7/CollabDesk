@@ -30,8 +30,7 @@ export default function OverviewPage() {
         .limit(1)
         .single();
 
-      if (error) console.error("Error fetching stats:", error);
-      else setStats(data);
+      setStats(data);
     };
     fetchStats();
   }, []);

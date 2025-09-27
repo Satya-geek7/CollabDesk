@@ -1,3 +1,6 @@
+import { supabase } from "../../../../lib/supabaseClient"; // path to your Supabase client
+import useChatStore from "../../../../Zustand/chatStore"; // path to your Zustand store
+
 // Constants.jsx
 export const messageActions = {
   "mark-read": () => console.log("Mark all as Read"),
@@ -6,7 +9,42 @@ export const messageActions = {
 };
 
 export const channelActions = {
-  "new-channel": () => console.log("Create new channel"),
+  "new-channel": async () => {
+    const channelName = prompt("Enter new channel name");
+    if (!channelName) return;
+
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser();
+
+    if (!user) return alert("You must be logged in to create a channel");
+
+    const { data, error } = await supabase
+      .from("channels")
+      .insert([
+        {
+          name: channelName,
+          created_by: user.id, // ✅ important for RLS
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating channel:", error.message);
+      return;
+    }
+
+    // Update Zustand
+    const { channels, setChannels, setCurrentChannel, setMessages } =
+      useChatStore.getState();
+
+    const newChannel = { ...data, lastMessage: "" };
+    setChannels([...channels, newChannel]);
+    setCurrentChannel(newChannel.id);
+    setMessages(newChannel.id, []);
+  },
   manage: () => console.log("Manage channels"),
   leave: () => console.log("Leave channel"),
 };

@@ -1,10 +1,10 @@
 // ListRenderer.jsx
 import { motion, AnimatePresence } from "framer-motion";
 
-const ListRenderer = ({ items, type }) => (
+const ListRenderer = ({ items, type, onItemClick }) => (
   <div className="border max-h-[277px] overflow-y-auto scrollbar-hide rounded-xl divide-y divide-gray-200 overflow-hidden">
     <AnimatePresence>
-      {items.map((i) => (
+      {items?.map((i) => (
         <motion.div
           key={i.id}
           initial={{ opacity: 0, y: 10 }}
@@ -12,10 +12,17 @@ const ListRenderer = ({ items, type }) => (
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="flex justify-between items-center p-3 hover:bg-white/70 transition cursor-pointer"
+          onClick={() => {
+            if (onItemClick) onItemClick(i);
+          }}
         >
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-gray-600 text-lg">
-              {type === "messages" ? i.sender[0] : i.type === "public" ? "#" : "🔒"}
+              {type === "messages"
+                ? i.sender[0]
+                : i.type === "public"
+                ? "#"
+                : "🔒"}
             </div>
             <div>
               <p className="font-semibold flex items-center">

@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema } from "../../Schemas/zodSchema";
 import { supabase } from "../../lib/supabaseClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import Input from "../../Components/ui/CmnCmpnts/Input";
@@ -21,28 +21,53 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const [message, setMessage] = useState("");
 
-  const setUser = useStore((state) => state.setUser); // ✅ Zustand actions
+  const setUser = useStore((state) => state.setUser);
   const setSession = useStore((state) => state.setSession);
+  const setProfile = useStore((state) => state.setProfile);
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
     setMessage("");
 
-    const { email, password, name } = data;
+    const { email, password, name } = formData;
+
     const { data: signUpData, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name },
+        data: { full_name: name },
       },
     });
 
     if (error) {
       toast.error(error.message || "Something went wrong.");
-    } else {
-      // ✅ Save to Zustand store
-      if (signUpData.user) setUser(signUpData.user);
-      if (signUpData.session) setSession(signUpData.session);
+      return;
+    }
 
+    if (signUpData?.user) {
+      // ✅ create profile row
+      await supabase.from("profiles").upsert({
+        id: signUpData.user.id,
+        display_name: name,
+        username:
+          name?.toLowerCase().replace(/\s+/g, "-") ||
+          signUpData.user.email.split("@")[0],
+        avatar_url: null,
+      });
+
+      // ✅ store user & session in Zustand
+      setUser(signUpData.user);
+      setSession(signUpData.session);
+
+      // ✅ fetch and store profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", signUpData.user.id)
+        .single();
+
+      if (profile) setProfile(profile);
+
+      // ✅ success message + redirect
       toast.success("Welcome! Please verify from Gmail", {
         duration: 4000,
         style: {
@@ -52,9 +77,11 @@ export default function SignupPage() {
         },
         icon: "👏",
       });
+
       navigate("/dashboard");
     }
   };
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-100 px-4">
       <motion.div

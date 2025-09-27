@@ -20,6 +20,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useStore((state) => state.setUser); // ✅ Zustand actions
   const setSession = useStore((state) => state.setSession);
+  const setProfile = useStore((state) => state.setProfile);
 
   const onSubmit = async (data) => {
     const { email, password } = data;
@@ -31,10 +32,17 @@ export default function LoginPage() {
 
     if (error) {
       toast.error(error.message || "Login failed");
-    } else {
-      // ✅ Save to Zustand store
-      if (signInData.user) setUser(signInData.user);
-      if (signInData.session) setSession(signInData.session);
+    } else if (!error && signInData.user) {
+      setUser(signInData.user);
+      setSession(signInData.session);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", signInData.user.id)
+        .single();
+
+      if (profile) setProfile(profile);
 
       toast.success("Logged in successfully!");
       navigate("/dashboard");
@@ -117,7 +125,7 @@ export default function LoginPage() {
         >
           Don’t have an account?{" "}
           <Link
-            to="/signup"
+            to="/register"
             className="text-purple-700 font-medium hover:underline"
           >
             Sign up

@@ -9,7 +9,7 @@ export default function LoadingPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowFail(true); // update state after 5s
-    }, 5000);
+    }, 8000);
 
     return () => clearTimeout(timer); // cleanup if unmounts early
   }, []);

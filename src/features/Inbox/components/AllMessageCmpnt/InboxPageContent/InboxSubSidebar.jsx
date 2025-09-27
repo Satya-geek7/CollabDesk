@@ -217,6 +217,7 @@ const InboxSubSidebar = () => {
               key={i.id}
               icon={i.icon}
               path={i.path}
+              onClick={() => handleClick(path)}
               label={i.label}
               badgeColor={
                 i.badgeColor || "bg-gradient-to-r from-pink-500 to-purple-500"
@@ -237,6 +238,7 @@ const InboxSubSidebar = () => {
               icon={i.icon}
               path={i.path}
               label={i.label}
+              onClick={() => handleClick(path)}
               badge={i.badge}
               iconColor={i.iconColor}
               badgeColor={
@@ -257,6 +259,7 @@ const InboxSubSidebar = () => {
               key={i.id}
               icon={i.icon}
               label={i.label}
+              onClick={() => handleClick(path)}
               badge={i.badge}
               path={i.path}
               badgeColor={

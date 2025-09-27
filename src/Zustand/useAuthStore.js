@@ -5,17 +5,19 @@ const useStore = create(
   devtools(
   persist(
     (set) => ({
-      users: [],
+      user: [],
       session: null,
-      setUser: (userData) =>
-        set((state) => ({
-          users: [userData, ...state.users],
-        })),
-      setSession: (sessionData) => set({ session: sessionData }),
+      profile: null,
+
+      setUser: (u) => set({ user: u}),
+      setSession: (s) => set({ session: s }),
+      setProfile: (p) => set({profile: p}),
+      
       logout: () =>
         set(() => ({
-          users: [],
+          user: [],
           session: null,
+          profile: null
         })),
     }),
     {

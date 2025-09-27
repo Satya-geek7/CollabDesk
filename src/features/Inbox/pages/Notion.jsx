@@ -2,7 +2,7 @@ import React from 'react'
 
 const Notion = () => {
   return (
-    <div>Notion</div>
+    <div className='flex h-screen justify-center items-center'>Notion</div>
   )
 }
 

@@ -80,7 +80,7 @@ export default function AppRouter() {
         }
       />
       <Route
-        path="/signup"
+        path="/register"
         element={
           <PublicRoute>
             <Signup />
