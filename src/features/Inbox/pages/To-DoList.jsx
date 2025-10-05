@@ -11,7 +11,9 @@ import { useTodos } from "../../../services/useTodos";
 //Common error page
 import ErrorPage from "../../../Components/ui/CmnCmpnts/ErrorPage";
 
-const nowPath = location.pathname.toLowerCase();
+const CurntPath = `${
+    window.location.origin
+  }${location.pathname.toLowerCase()}`;;
 
 const ToDoPage = () => {
   const [todos, setTodos] = useTodos();
@@ -80,6 +82,7 @@ const ToDoPage = () => {
     setTodoInput("");
     setMessage("Todo created successfully");
     setTimeout(() => setMessage(""), 2000);
+    await fetchTodos();
   };
 
   // Delete todo
@@ -117,7 +120,7 @@ const ToDoPage = () => {
   return (
     <>
       {error ? (
-        <ErrorPage children={error} path={nowPath} />
+        <ErrorPage children={error} path={CurntPath} />
       ) : (
         <div className="flex w-screen scrollbar-hide md:h-screen lg:h-[550px] sm:h-screen h-[550px] mt-[100px] md:mt-[100px] sm:mt-[120px] rounded-2xl justify-center">
           <ToDoLayout>

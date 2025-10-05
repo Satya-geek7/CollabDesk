@@ -1,78 +1,101 @@
 import React, { useEffect, useRef, useState } from "react";
 import ChatInput from "./ChatInput";
-import { supabase } from "../../../../../lib/supabaseClient"; // import your Supabase client
-import useChatStore from "../../../../../Zustand/chatStore";
+import { supabase } from "../../../../lib/supabaseClient"; // import your Supabase client
+import useChatStore from "../../../../Zustand/chatStore";
 
 const MainChat = () => {
   const [messages, setMessages] = useState([]);
   const chatEndRef = useRef(null);
-  const currentChannelId = useChatStore((s) => s.currentChannelId);
+  const currentChatId = useChatStore((s) => s.currentChatId);
+  const [error, setError] = useState();
+  const [isloading, setIsLoading] = useState(false);
 
   const [user, setUser] = useState(null);
+
+  // No selcted chat
+  const [noChat, setNoChat] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
       const { data, error } = await supabase.auth.getUser();
       if (data?.user) setUser(data.user);
+      else if (error.message)
+        setError("User not logged in! Login to Access this Feature!");
     };
     getUser();
   }, []);
 
-  const updateMsg = (newMessage) => {
-    setMessages((prev) => [...prev, newMessage]);
-  };
+  useEffect(() => {
+    const fetchMsg = async () => {
+      if (!currentChatId) {
+        return setNoChat(true);
+      } else setNoChat(false);
+
+      setIsLoading(true);
+      const { data: fetchedData, error: dataError } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("chat_id", currentChatId);
+      if (fetchedData) setMessages(fetchedData);
+      else if (dataError?.message) setError(dataError.message);
+    };
+
+    fetchMsg();
+  }, [currentChatId]);
+
+  //Real-time message updates
+  useEffect(() => {
+    if (!currentChatId) return;
+
+    const channel = supabase.channel(`chat:${currentChatId}`).on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `chat_id=eq.${currentChatId}`,
+      },
+      (payload) => {
+        setMessages((prev) => {
+          // If optimistic message already exists (same temp_id), replace it
+          const exists = prev.some(
+            (m) =>
+              m.content?.client_temp_id &&
+              m.content.client_temp_id === payload.new.content?.client_temp_id
+          );
+
+          if (exists) {
+            return prev.map((m) =>
+              m.content?.client_temp_id === payload.new.content?.client_temp_id
+                ? payload.new
+                : m
+            );
+          }
+
+          // Otherwise, just append the new message
+          return [...prev, payload.new];
+        });
+      }
+    );
+  }, [currentChatId]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- SUPABASE REALTIME SUBSCRIPTION ---
-  useEffect(() => {
-    if (!currentChannelId) return;
-
-    const fetchMessages = async () => {
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("channel_id", currentChannelId) // ✅ only this channel
-        .order("created_at", { ascending: true });
-
-      if (!error && data) setMessages(data);
-    };
-
-    fetchMessages();
-
-    // Listen for new messages
-    const channel = supabase
-      .channel(`realtime-messages-${currentChannelId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `channel_id=eq.${currentChannelId}`,
-        },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentChannelId]);
+  const updateMsg = (newMsg) => {
+    setMessages((prev) => [...prev, newMsg]);
+  };
 
   const renderMessage = (msg) => {
-    // your existing renderMessage logic unchanged
-    if (msg.type === "system") {
-      return (
-        <div key={msg.id} className="text-center text-xs text-gray-500 my-3">
-          {msg.body}
-        </div>
-      );
-    }
+    //   // your existing renderMessage logic unchanged
+    //   if (msg.type === "system") {
+    //     return (
+    //       <div key={msg.id} className="text-center text-xs text-gray-500 my-3">
+    //         {msg.body}
+    //       </div>
+    //     );
+    //   }
 
     return msg.sender_id === user?.id ? (
       <div
@@ -178,7 +201,7 @@ const MainChat = () => {
                   bg-white
                   sm:top-[51px] sm:bottom-[40px] sm:h-[calc(100vh-91px)]
                   md:top-[51px] md:bottom-[40px] md:h-[calc(100vh-91px)]
-                  lg:top-[67px] lg:bottom-[67px] lg:ml-[762px] lg:w-[750px] lg:h-[calc(100vh-67px)]
+                  lg:top-[67px] lg:bottom-[67px] lg:ml-[762px]
   "
     >
       {/* Messages */}
@@ -188,7 +211,7 @@ const MainChat = () => {
       </div>
 
       {/* Input */}
-      <ChatInput updateMsg={updateMsg} channelId={currentChannelId} />
+      <ChatInput updateMsg={updateMsg} />
       <div className="border-r" />
     </div>
   );

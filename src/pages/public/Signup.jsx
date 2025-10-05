@@ -81,7 +81,7 @@ export default function SignupPage() {
       navigate("/dashboard");
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-100 px-4">
       <motion.div

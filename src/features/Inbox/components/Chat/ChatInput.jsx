@@ -15,13 +15,14 @@ import {
 import { ReactSketchCanvas } from "react-sketch-canvas";
 import EmojiPicker from "emoji-picker-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../../../../../lib/supabaseClient";
-import IconTooltip from "../../../../../Components/ui/CmnCmpnts/Tooltip";
+import { supabase } from "../../../../lib/supabaseClient";
+import IconTooltip from "../../../../Components/ui/CmnCmpnts/Tooltip";
+import useChatStore from "../../../../Zustand/chatStore";
 
 const textModes = ["text", "note", "command", "sketch"];
-const otherModes = ["fonts", "emoji", "voice", "attachment"];
+const otherModes = ["emoji", "voice", "attachment"];
 
-const ChatInput = ({ updateMsg, channelId }) => {
+const ChatInput = ({ updateMsg }) => {
   const { register, handleSubmit, reset } = useForm();
   const [mode, setMode] = useState("text");
   const [input, setInput] = useState("");
@@ -29,69 +30,68 @@ const ChatInput = ({ updateMsg, channelId }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const containerRef = useRef(null);
   const sketchRef = useRef(null);
+  const currentChatId = useChatStore((s) => s.currentChatId);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleInput = (e) => setInput(e.target.value);
 
+  //Send message and update ui and Database
   const onSubmit = async (data) => {
-    let text = "";
-    let content = {};
+    if (!input.trim()) return;
+    if (!currentChatId) return;
 
-    if (mode === "text") text = input;
-    else if (mode === "command") text = data.command || "";
-    else if (mode === "note") text = data.note || "";
-    else text = input || data.message || data.command || data.note || "";
+    setLoading(true);
 
-    // Handle Sketch export
-    if (mode === "sketch" && sketchRef.current) {
-      const sketchData = await sketchRef.current.exportImage("png");
-      content.sketchData = sketchData;
-      text = "[Sketch]";
-    }
-
-    // Handle File Upload
-    if (mode === "attachment" && selectedFile) {
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from("chat-files")
-        .upload(`attachments/${Date.now()}_${selectedFile.name}`, selectedFile);
-
-      if (uploadError) {
-        console.error("File upload error:", uploadError);
-        return;
-      }
-      const fileUrl = supabase.storage
-        .from("chat-files")
-        .getPublicUrl(uploadData.path).data.publicUrl;
-      content.fileUrl = fileUrl;
-      text = `[File] ${selectedFile.name}`;
-    }
-
-    if (!text.trim()) return;
-
-    // Build message payload for Supabase
-    const newMessage = {
-      channel_id: channelId, // ✅ comes from props
-      sender_id: (await supabase.auth.getUser()).data.user.id, // ✅ replace with logged-in user id
-      body: text.trim(),
-      type: mode,
-      content: Object.keys(content).length ? content : { extra: null },
-    };
-
-    // Insert into DB
-    const { data: inserted, error } = await supabase
-      .from("messages")
-      .insert([newMessage])
-      .select();
-    if (error) {
-      console.error("Insert error:", error);
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) {
+      console.error("User not logged in");
+      setLoading(false);
       return;
     }
 
-    // Update UI with DB message (includes id + created_at)
-    updateMsg(inserted[0]);
-    reset();
+    // Create a temporary optimistic message
+    const temp_id = `temp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const optimisticMsg = {
+      id: temp_id,
+      chat_id: currentChatId,
+      sender_id: userId,
+      body: input,
+      type: "text",
+      content: { client_temp_id: temp_id },
+      created_at: new Date().toISOString(),
+      _status: "sending",
+    };
+
+    // Immediately update UI
+    updateMsg(optimisticMsg);
+
+    // Insert message into Supabase
+    const { data: dbData, error } = await supabase
+      .from("messages")
+      .insert([
+        {
+          chat_id: currentChatId,
+          sender_id: optimisticMsg.sender_id,
+          body: optimisticMsg.body,
+          type: "text",
+          content: {},
+        },
+      ])
+      .select();
+
+    if (error) {
+      setError(
+        "There is some Malfunction connecting and sending th message! " || error
+      );
+      return;
+    }
+
+    // Reset input
     setInput("");
-    setSelectedFile(null);
-    setMode("text");
+    reset();
+    setLoading(false);
   };
 
   // Voice recognition
@@ -135,11 +135,11 @@ const ChatInput = ({ updateMsg, channelId }) => {
   return (
     <div
       ref={containerRef}
-      className="flex border-t w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto flex-col bg-white"
+      className="flex border-t w-full max-w-full  mx-auto flex-col bg-white"
     >
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="flex flex-col gap-3 px-4 py-2 backdrop-blur-xl shadow-lg transition-all"
+        className="flex flex-col gap-3 px-2 py-2 backdrop-blur-xl shadow-lg transition-all"
       >
         {/* Collapsible Mode Switch */}
         <div className="flex items-center gap-2 pl-2">
@@ -233,8 +233,6 @@ const ChatInput = ({ updateMsg, channelId }) => {
                     text={
                       m === "emoji"
                         ? "Emojis"
-                        : m === "fonts"
-                        ? "Fonts"
                         : m === "voice"
                         ? "Voice Message"
                         : "Attach File"
@@ -253,7 +251,6 @@ const ChatInput = ({ updateMsg, channelId }) => {
                       }`}
                     >
                       {m === "emoji" && <Sticker className="w-4 h-4" />}
-                      {m === "fonts" && <Type className="w-4 h-4" />}
                       {m === "voice" && <Mic className="w-4 h-4" />}
                       {m === "attachment" && <Paperclip className="w-4 h-4" />}
                     </button>
@@ -277,13 +274,19 @@ const ChatInput = ({ updateMsg, channelId }) => {
         {/* Input + Send Button */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
           {mode === "text" && (
-            <input
-              type="text"
+            <textarea
               {...register("message", { required: true })}
               onChange={handleInput}
               value={input}
               placeholder="Type your futuristic message..."
-              className="flex-1 w-full bg-transparent outline-none placeholder-gray-400 text-gray-900 text-sm border rounded-md px-3 py-2"
+              rows={1}
+              className="flex-1 w-full scrollbar-hide resize-none bg-transparent outline-none placeholder-gray-400 text-gray-900 text-sm border rounded-md px-3 py-2"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault(); // call your send message function
+                }
+                // Shift+Enter naturally adds newline, so no need to handle that
+              }}
             />
           )}
           {mode === "command" && (
@@ -325,16 +328,6 @@ const ChatInput = ({ updateMsg, channelId }) => {
               />
             </div>
           )}
-          {mode === "fonts" && (
-            <select
-              onChange={(e) => setInput(`[font:${e.target.value}] ` + input)}
-              className="p-2 border rounded-md text-sm"
-            >
-              <option value="serif">Serif</option>
-              <option value="sans-serif">Sans</option>
-              <option value="monospace">Monospace</option>
-            </select>
-          )}
           {mode === "attachment" && (
             <input
               type="file"
@@ -346,12 +339,18 @@ const ChatInput = ({ updateMsg, channelId }) => {
             />
           )}
 
-          <button
-            type="submit"
-            className="p-2 self-end sm:self-auto rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition shadow-lg"
-          >
-            <Send className="w-5 h-5 text-white" />
-          </button>
+          {loading ? (
+            <>
+              <div className="text-xs ml-2 mr-2">Sending...</div>
+            </>
+          ) : (
+            <button
+              type="submit"
+              className="p-2 mx-2 self-end sm:self-auto rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 transition shadow-lg"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          )}
         </div>
       </form>
     </div>

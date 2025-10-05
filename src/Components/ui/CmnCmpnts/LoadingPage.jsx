@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import React from "react";
 import { motion } from "framer-motion";
 import InternetFail from "./InternetFail";
 
@@ -7,11 +6,8 @@ export default function LoadingPage() {
   const [showFail, setShowFail] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowFail(true); // update state after 5s
-    }, 8000);
-
-    return () => clearTimeout(timer); // cleanup if unmounts early
+    const timer = setTimeout(() => setShowFail(true), 15000);
+    return () => clearTimeout(timer);
   }, []);
 
   if (showFail) {
@@ -19,26 +15,37 @@ export default function LoadingPage() {
   }
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="flex flex-col items-center"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
+        className="flex flex-col items-center space-y-6"
       >
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{
-            repeat: Infinity,
-            duration: 1.2,
-            ease: "linear",
-          }}
-          className="w-12 h-12 border-4 border-gray-800 rounded-full"
-        ></motion.div>
+        {/* Animated Dots */}
+        <div className="flex space-x-2 mt-2">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              className="w-3 h-3 bg-gray-800 rounded-full"
+              animate={{ y: [0, -8, 0] }}
+              transition={{
+                duration: 0.6,
+                repeat: Infinity,
+                delay: i * 0.2,
+              }}
+            />
+          ))}
+        </div>
 
-        <h1 className="text-2xl text-gray-800 font-semibold mt-6 tracking-wide">
+        {/* Loading Text */}
+        <motion.h1
+          className="text-2xl font-semibold text-gray-800 tracking-wide"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.2 }}
+        >
           Loading...
-        </h1>
+        </motion.h1>
       </motion.div>
     </div>
   );

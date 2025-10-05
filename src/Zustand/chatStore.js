@@ -1,19 +1,19 @@
 import { create } from "zustand";
 
 const useChatStore = create((set) => ({
-  currentChannelId: null,
-  setCurrentChannel: (id) => set({ currentChannelId: id }),
+  currentChatId: null,
+  setCurrentChatId: (id) => set({ currentChatId: id }),
 
-  messages: {}, // { channelId: [msg1, msg2, ...] }
-  setMessages: (channelId, msgs) =>
+  messages: {}, // { ChatId: [msg1, msg2, ...] }
+  setMessages: (ChatId, msgs) =>
     set((state) => ({
-      messages: { ...state.messages, [channelId]: msgs },
+      messages: { ...state.messages, [ChatId]: msgs },
     })),
-  addMessage: (channelId, msg) =>
+  addMessage: (ChatId, msg) =>
     set((state) => ({
       messages: {
         ...state.messages,
-        [channelId]: [...(state.messages[channelId] || []), msg],
+        [ChatId]: [...(state.messages[ChatId] || []), msg],
       },
     })),
 

@@ -8,12 +8,17 @@ import {
   ChevronDown,
   ChevronRight,
   MoreHorizontal,
+  LogOut,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 import { motion } from "framer-motion";
 import useBreadcrumbStore from "../../Zustand/breadCrumbStore";
+import useStore from "../../Zustand/useAuthStore";
+import { Navigate } from "react-router-dom";
 
 const Topbar = ({ setMobileOpen }) => {
+  //States
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -23,9 +28,29 @@ const Topbar = ({ setMobileOpen }) => {
   const [scrollDir, setScrollDir] = useState("up");
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false); // 👈 screen size tracker
 
+  //Zustand
   const location = useLocation();
   const breadcrumbStore = useBreadcrumbStore((state) => state);
   const setBreadcrumb = useBreadcrumbStore((state) => state.setBreadcrumb);
+  const LogoutFromStore = useStore((state) => state.logout);
+
+  const Logout = async () => {
+    const LgotCnfrmd = confirm("Are you sure you want to logout?");
+    if (LgotCnfrmd) {
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw alert(error.message);
+
+        localStorage.clear();
+        LogoutFromStore();
+        alert("User signed out successfully");
+        return <Navigate to="/login" replace />;
+      } catch (err) {
+        console.error("Logout failed:", err.message);
+        alert("An error occurred while logging out.");
+      }
+    }
+  };
 
   // Detect screen size
   useEffect(() => {
@@ -171,6 +196,15 @@ const Topbar = ({ setMobileOpen }) => {
                 <ChevronDown size={16} className="text-gray-500" />
               </button>
             </div>
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => Logout()}
+              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <LogOut size={20} className="text-gray-600" />
+            </button>
           </div>
 
           {/* Mobile Dropdown */}

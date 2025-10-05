@@ -20,7 +20,7 @@ const ErrorPage = ({ children, path }) => {
           href={`/${path}`}
           className="inline-block bg-red-500 text-white font-semibold px-6 py-3 rounded-lg shadow hover:bg-red-600 transition-colors"
         >
-          Go Back Home
+          Go Back
         </a>
       </motion.div>
     </div>

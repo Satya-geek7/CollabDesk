@@ -7,12 +7,12 @@ const IconTooltip = ({ children, text }) => {
         <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="bg-gray-100 text-gray-900 text-xs rounded-md px-2 py-1 shadow-lg"
+            className=" bg-gray-100 text-gray-900 text-xs rounded-md px-2 py-1 shadow-lg z-[9999]"
             side="top"
             sideOffset={6}
           >
             {text}
-            <Tooltip.Arrow className="fill-gray-100" />
+            <Tooltip.Arrow className="fill-gray-900" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>

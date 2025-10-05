@@ -17,12 +17,11 @@ import MainDashBoard from "../features/Dashboard/pages/MainDashboard.jsx";
 import Analytics from "../features/Dashboard/pages/Analytics.jsx";
 import Report from "../features/Dashboard/pages/Report.jsx";
 
+import MessagePage from "../features/Inbox/pages/Messgae/MessagesPage.jsx";
+
 // Inbox
-import InboxLayout from "../features/Inbox/components/AllMessageCmpnt/InboxPageContent/InboxLayout.jsx";
-import AllMessages from "../features/Inbox/pages/AllMessages.jsx";
-import Unread from "../features/Inbox/pages/Unread.jsx";
-import Starred from "../features/Inbox/pages/Starred.jsx";
-import Archived from "../features/Inbox/pages/Archived.jsx";
+import InboxLayout from "../features/Inbox/components/AllMessageCmpnt/InboxCmnCmpnt/InboxLayout.jsx";
+import MainChat from "../features/Inbox/components/Chat/MainChat.jsx";
 import Drafts from "../features/Inbox/pages/Drafts.jsx";
 import Slack from "../features/Inbox/pages/Slack.jsx";
 import Jira from "../features/Inbox/pages/Jira.jsx";
@@ -115,10 +114,8 @@ export default function AppRouter() {
 
         {/* Inbox */}
         <Route path="/inbox" element={<InboxLayout />}>
-          <Route index element={<AllMessages />} />
-          <Route path="unread" element={<Unread />} />
-          <Route path="starred" element={<Starred />} />
-          <Route path="archived" element={<Archived />} />
+          <Route path="messages" element={<MessagePage />} />
+          <Route path="mainchat" element={<MainChat />} />
           <Route path="drafts" element={<Drafts />} />
           <Route path="slack" element={<Slack />} />
           <Route path="jira" element={<Jira />} />

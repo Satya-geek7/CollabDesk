@@ -27,6 +27,7 @@
     "emoji-mart": "^5.6.0",
     "emoji-picker-react": "^4.13.3",
     "framer-motion": "^12.23.12",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.540.0",
     "react": "^18.3.1",
     "react-beautiful-dnd": "^13.1.1",
