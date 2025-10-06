@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IconTooltip from "../../../../../Components/ui/CmnCmpnts/Tooltip";
+import useResponsive from "../../../../../Zustand/useResoponsive";
 
 const InboxSubSidebar = () => {
   const filterItems = [
@@ -83,7 +84,10 @@ const InboxSubSidebar = () => {
   };
 
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [istoggle, setIsToggle] = useState(false);
+
+  //Zustand state for inbox-SubSidebar toggle Responsiveness
+  const setToggled = useResponsive((s) => s.setToggled);
+  const istoggled = useResponsive((s) => s.istoggled);
 
   useEffect(() => {
     const goOnline = () => setIsOnline(true);
@@ -109,7 +113,7 @@ const InboxSubSidebar = () => {
   }) => (
     <div
       className={`flex items-center justify-between px-4 ${
-        istoggle ? "py-4" : "py-3"
+        istoggled === true ? "py-4" : "py-3"
       }  mb-1 rounded-xl cursor-pointer transition-all duration-200 ease-out
         hover:bg-white/20 hover:translate-x-1 hover:shadow-md ${
           borderColor || ""
@@ -145,12 +149,14 @@ const InboxSubSidebar = () => {
     </button>
   );
 
-  useEffect(() => {
-    setIsToggle(true);
-  }, []);
+  // useEffect(() => {
+  //   setToggled(true);
+  // }, []);
 
   const handleToggle = () => {
-    setIsToggle(!istoggle);
+    if (istoggled === true) {
+      setToggled(false);
+    } else setToggled(true);
   };
 
   return (
@@ -159,7 +165,11 @@ const InboxSubSidebar = () => {
         className={`hidden lg:block mt-[67px] fixed top-0 left-0 text-black 
     bg-white/20 backdrop-blur-xl border border-black/10 rounded-2xl px-5 py-6 shadow-lg
     transition-all duration-300 
-    ${istoggle ? "lg:w-[100px] md:w-[80px]" : "lg:w-[380px] md:w-[300px]"}`}
+    ${
+      istoggled === true
+        ? "lg:w-[100px] md:w-[80px]"
+        : "lg:w-[380px] md:w-[300px]"
+    }`}
       >
         {/* Filters */}
         <div className="mb-3">
@@ -169,10 +179,10 @@ const InboxSubSidebar = () => {
             className="absolute top-4 right-[-12px] w-6 h-6 flex items-center justify-center 
              bg-white/90 text-black rounded-full shadow-md hover:bg-white/100 transition-all"
           >
-            {istoggle ? ">" : "<"}
+            {istoggled === true ? ">" : "<"}
           </button>
 
-          {!istoggle && (
+          {istoggled === false && (
             <h4 className="font-semibold mb-3 px-2 text-xs tracking-wide uppercase">
               Filters
             </h4>
@@ -195,7 +205,7 @@ const InboxSubSidebar = () => {
                 icon={i.icon}
                 path={i.path}
                 onClick={() => handleClick(i.path)}
-                label={!istoggle ? i.label : null}
+                label={istoggled === false ? i.label : null}
                 badgeColor={
                   i.badgeColor || "bg-gradient-to-r from-pink-500 to-purple-500"
                 }
@@ -207,7 +217,7 @@ const InboxSubSidebar = () => {
 
         {/* Sources */}
         <div className="mb-6">
-          {!istoggle && (
+          {istoggled === false && (
             <h4 className="font-semibold mb-3 px-2 text-xs tracking-wide uppercase">
               Sources
             </h4>
@@ -227,9 +237,9 @@ const InboxSubSidebar = () => {
                 key={i.id}
                 icon={i.icon}
                 path={i.path}
-                label={!istoggle ? i.label : null}
+                label={istoggled === false ? i.label : null}
                 onClick={() => handleClick(path)}
-                badge={!istoggle ? i.badge : null}
+                badge={istoggled === false ? i.badge : null}
                 iconColor={i.iconColor}
                 badgeColor={
                   i.badgeColor || "bg-gradient-to-r from-pink-500 to-purple-500"
@@ -242,7 +252,7 @@ const InboxSubSidebar = () => {
 
         {/* Add-Ons */}
         <div>
-          {!istoggle && (
+          {istoggled === false && (
             <h4 className="font-semibold mb-3 px-2 text-xs tracking-wide uppercase">
               Add-On's
             </h4>
@@ -261,8 +271,8 @@ const InboxSubSidebar = () => {
               <SidebarItem
                 key={i.id}
                 icon={i.icon}
-                label={!istoggle ? i.label : null}
-                badge={!istoggle ? i.badge : null}
+                label={istoggled === false ? i.label : null}
+                badge={istoggled === false ? i.badge : null}
                 path={i.path}
                 badgeColor={
                   i.badgeColor || "bg-gradient-to-r from-pink-500 to-purple-500"

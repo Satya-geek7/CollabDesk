@@ -1,4 +1,5 @@
 import React from "react";
+import { Children } from "react";
 
 const Input = ({
   label,
@@ -7,6 +8,7 @@ const Input = ({
   register,
   error,
   placeholder,
+  children
 }) => {
   return (
     <div className="space-y-1">
@@ -25,7 +27,7 @@ const Input = ({
         {...register(name)}
         className={`w-full px-4 py-3 rounded-xl border ${
           error ? "border-red-500" : "border-gray-300"
-        } focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white/90`}
+        } focus:ring-2 focus:ring-purple-500 focus:outline-none bg-white/90 ${children}`}
       />
       {error && <p className="text-sm text-red-600">{error.message}</p>}
     </div>

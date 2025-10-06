@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import ChatInput from "./ChatInput";
 import { supabase } from "../../../../lib/supabaseClient"; // import your Supabase client
 import useChatStore from "../../../../Zustand/chatStore";
+import ErrorPage from "../../../../Components/ui/CmnCmpnts/ErrorPage";
+import LoadingPage from "../../../../Components/ui/CmnCmpnts/LoadingPage";
+import { set } from "zod";
 
 const MainChat = () => {
   const [messages, setMessages] = useState([]);
@@ -11,6 +14,7 @@ const MainChat = () => {
   const [isloading, setIsLoading] = useState(false);
 
   const [user, setUser] = useState(null);
+  const curntPath = `${window.location.pathname.toLowerCase()}`;
 
   // No selcted chat
   const [noChat, setNoChat] = useState(false);
@@ -36,8 +40,13 @@ const MainChat = () => {
         .from("messages")
         .select("*")
         .eq("chat_id", currentChatId);
-      if (fetchedData) setMessages(fetchedData);
-      else if (dataError?.message) setError(dataError.message);
+      if (fetchedData) {
+        setMessages(fetchedData);
+        setIsLoading(false);
+      } else if (dataError?.message)
+        setError(
+          "There is some Malfunction, Pls try again !" || dataError.message
+        );
     };
 
     fetchMsg();
@@ -45,7 +54,8 @@ const MainChat = () => {
 
   //Real-time message updates
   useEffect(() => {
-    if (!currentChatId) return;
+    if (!currentChatId)
+      return setError("Some Error Occured getting chat data!");
 
     const channel = supabase.channel(`chat:${currentChatId}`).on(
       "postgres_changes",
@@ -191,9 +201,16 @@ const MainChat = () => {
     );
   };
 
+  {
+    error && <ErrorPage children={error} path={curntPath} />;
+  }
+  {
+    isloading && <LoadingPage />;
+  }
   return (
-    <div
-      className="
+    <>
+      <div
+        className="
                   fixed 
                   inset-x-0 
                   flex flex-col 
@@ -201,19 +218,20 @@ const MainChat = () => {
                   bg-white
                   sm:top-[51px] sm:bottom-[40px] sm:h-[calc(100vh-91px)]
                   md:top-[51px] md:bottom-[40px] md:h-[calc(100vh-91px)]
-                  lg:top-[67px] lg:bottom-[67px] lg:ml-[762px]
+                  lg:top-[67px]  lg:ml-[762px]
   "
-    >
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-4 space-y-5">
-        {messages.map(renderMessage)}
-        <div ref={chatEndRef} />
-      </div>
+      >
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pt-4 space-y-5">
+          {messages.map(renderMessage)}
+          <div ref={chatEndRef} />
+        </div>
 
-      {/* Input */}
-      <ChatInput updateMsg={updateMsg} />
-      <div className="border-r" />
-    </div>
+        {/* Input */}
+        <ChatInput updateMsg={updateMsg} />
+        <div className="border-r" />
+      </div>
+    </>
   );
 };
 

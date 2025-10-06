@@ -81,7 +81,7 @@ const ChatInput = ({ updateMsg }) => {
       ])
       .select();
 
-    if (error) {
+    if (error || !dbData) {
       setError(
         "There is some Malfunction connecting and sending th message! " || error
       );

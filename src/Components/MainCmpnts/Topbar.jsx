@@ -201,9 +201,12 @@ const Topbar = ({ setMobileOpen }) => {
           <div className="relative">
             <button
               onClick={() => Logout()}
-              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="relative p-2 rounded-lg hover:bg-red-400 transition-colors"
             >
-              <LogOut size={20} className="text-gray-600" />
+              <LogOut
+                size={20}
+                className="text-gray-600 hover:bg-red-400 hover:text-white"
+              />
             </button>
           </div>
 

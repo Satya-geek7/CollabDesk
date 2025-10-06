@@ -78,9 +78,11 @@ export default function SignupPage() {
         icon: "👏",
       });
 
-      navigate("/dashboard");
+      navigate("/dashboard/overview");
     }
   };
+
+  const [showPass, setShowPass] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-purple-100 px-4">
@@ -93,11 +95,14 @@ export default function SignupPage() {
         <h1 className="text-3xl font-bold text-purple-700 text-center mb-2">
           Create Account
         </h1>
-        <p className="text-center text-gray-500 mb-6">
+        <p className="text-center text-gray-600 mb-6">
           Join CollabDesk in a few steps.
         </p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-5 flex flex-col justify-between"
+        >
           <Input
             label="Full Name"
             name="name"
@@ -119,11 +124,22 @@ export default function SignupPage() {
           <Input
             label="Password"
             name="password"
-            type="password"
-            placeholder="••••••••"
+            type={`${showPass ? "text" : "Password"}`}
+            placeholder={`${showPass ? "Enter your Password" : "••••••••••"}`}
             register={register}
             error={errors.password}
           />
+
+          <div className="">
+            <input
+              className=" mx-2"
+              type="checkbox"
+              id="pass"
+              name="pass"
+              onChange={() => setShowPass(!showPass)}
+            />
+            <label for="pass">Show Password</label>
+          </div>
 
           <motion.button
             type="submit"

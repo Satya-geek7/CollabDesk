@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "../../Schemas/zodSchema";
 import { supabase } from "../../lib/supabaseClient";
@@ -45,9 +46,11 @@ export default function LoginPage() {
       if (profile) setProfile(profile);
 
       toast.success("Logged in successfully!");
-      navigate("/dashboard");
+      navigate("/dashboard/analytics");
     }
   };
+
+  const [showPass, setShowPass] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-white to-purple-200 px-4">
@@ -98,11 +101,22 @@ export default function LoginPage() {
           <Input
             label="Password"
             name="password"
-            type="password"
-            placeholder="••••••••"
+            type={`${showPass ? "text" : "Password"}`}
+            placeholder={`${showPass ? "Enter your Password" : "••••••••••"}`}
             register={register}
             error={errors.password}
           />
+
+          <div>
+            <input
+              className=" mx-2"
+              type="checkbox"
+              id="pass"
+              name="pass"
+              onChange={() => setShowPass(!showPass)}
+            />
+            <label for="pass">Show Password</label>
+          </div>
 
           <motion.button
             type="submit"
