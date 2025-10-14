@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import useChatStore from "../../../../Zustand/chatStore";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 
-const ChatsList = () => {
+const ChatsList = ({ setIsModalOpen }) => {
   const mockChats = [
     {
       id: 1,
@@ -156,63 +156,63 @@ const ChatsList = () => {
       unread: 0,
       avatar: "https://i.pravatar.cc/150?img=20",
     },
-    // ...rest of your mockChats
   ];
 
   const setCurrentChatId = useChatStore((s) => s.setCurrentChatId);
 
-  // ✅ fix: return JSX from this component
-  const ListRender = ({ list, family }) => {
-    return (
-      <div className="flex scrollbar-hidden flex-col border pt-2 lg:w-[500px] sm:w-[100vh] bg-white shadow-sm">
-        <div className="divide-y max-h-[430px] overflow-y-auto">
-          <div className="flex flex-row px-6 pb-5 pt-3 justify-between items-center">
-            <div className="font-semibold text-xl font-mono">{family}</div>
-            <div className="hover:cursor-pointer hover:text-gray-600">
-              <MoreHorizontal />
-            </div>
+  // --- Chat List ---
+  const ListRender = ({ list, family }) => (
+    <div className="flex flex-col border scrollbar-hidden pt-2 lg:w-[500px] bg-white shadow-sm relative">
+      <div className="divide-y max-h-[430px] overflow-y-auto scrollbar-hidden">
+        <div className="flex flex-row px-6 pb-5 pt-3 justify-between scrollbar-hidden items-center">
+          <div className="scrollbar-hidden font-semibold text-xl font-mono">
+            {family}
           </div>
+          <div
+            className="hover:cursor-pointer hover:text-gray-600"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <MoreHorizontal />
+          </div>
+        </div>
 
-          {list.map((c) => (
-            <div
-              key={c.id}
-              className="flex items-center justify-between lg:px-4 lg:py-4 sm:px-2 sm:py-2 hover:bg-gray-50 cursor-pointer transition"
-              onClick={() => setCurrentChatId(c.id)} // ✅ sets current chat
-            >
-              {/* Left: avatar + info */}
-              <div className="flex items-center gap-3">
-                <img
-                  src={c.avatar}
-                  alt={c.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <div className="font-medium text-gray-900">{c.name}</div>
-                  <div className="text-sm mt-1 text-gray-500 truncate max-w-[300px]">
-                    {c.lastMessage}
-                  </div>
+        {list.map((c) => (
+          <div
+            key={c.id}
+            className="flex items-center justify-between lg:p-4 sm:p-3 md:p-3 hover:bg-gray-50 cursor-pointer transition font-mono"
+            onClick={() => setCurrentChatId(c.id)}
+          >
+            <div className="flex items-center gap-3">
+              <img
+                src={c.avatar}
+                alt={c.name}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div>
+                <div className="font-medium text-gray-900">{c.name}</div>
+                <div className="text-sm mt-1 text-gray-500 truncate max-w-[300px]">
+                  {c.lastMessage}
                 </div>
               </div>
-
-              {/* Right: time + unread */}
-              <div className="flex flex-col items-end">
-                <span className="text-xs text-gray-400">{c.time}</span>
-                {c.unread > 0 && (
-                  <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 mt-2">
-                    {c.unread}
-                  </span>
-                )}
-              </div>
             </div>
-          ))}
-        </div>
+
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-gray-400">{c.time}</span>
+              {c.unread > 0 && (
+                <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 mt-2">
+                  {c.unread}
+                </span>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div>
-      <ListRender list={mockChats} family="Message / DM's" />
+      <ListRender list={mockChats} family="Messages / DM's" />
     </div>
   );
 };

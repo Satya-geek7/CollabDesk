@@ -32,7 +32,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      toast.error(error.message || "Login failed");
+      toast.error("Login failed maybe Check your Connection!");
     } else if (!error && signInData.user) {
       setUser(signInData.user);
       setSession(signInData.session);
